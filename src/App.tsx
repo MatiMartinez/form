@@ -10,14 +10,16 @@ function App() {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [showExamSelector, setShowExamSelector] = useState(false);
+  const [showLovePopup, setShowLovePopup] = useState(false);
 
   const handleSelect = (questionId: number, optionIndex: number) => {
-    if (submitted) return;
+    if (submitted || answers[questionId] !== undefined) return;
     setAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
   };
 
   const handleSubmit = () => {
     setSubmitted(true);
+    setShowLovePopup(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -51,6 +53,26 @@ function App() {
 
   return (
     <div className="quiz-container">
+      {/* Love Popup */}
+      {showLovePopup && (
+        <div className="love-popup-overlay" onClick={() => setShowLovePopup(false)}>
+          <div className="love-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="love-hearts">
+              <span className="heart heart-1">💕</span>
+              <span className="heart heart-2">💖</span>
+              <span className="heart heart-3">💕</span>
+            </div>
+            <div className="love-emoji">🥰</div>
+            <h2 className="love-title">Te amo mucho princesa</h2>
+            <p className="love-subtitle">💝</p>
+            <div className="love-sparkles">✨💫✨</div>
+            <button className="love-close-btn" onClick={() => setShowLovePopup(false)}>
+              Ver mis resultados 💪
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className="quiz-header">
         <button className="exam-selector-btn" onClick={() => setShowExamSelector(!showExamSelector)}>
           <span className="selector-icon">☰</span>
@@ -101,11 +123,12 @@ function App() {
 
       <div className="questions-list">
         {currentExam.questions.map((q, qIndex) => {
-          const isCorrect = answers[q.id] === q.correctAnswer;
           const hasAnswer = answers[q.id] !== undefined;
+          const isCorrect = answers[q.id] === q.correctAnswer;
+          const isLocked = hasAnswer;
 
           return (
-            <div key={q.id} className={`question-card ${submitted ? (isCorrect ? "correct" : hasAnswer ? "incorrect" : "unanswered") : ""}`}>
+            <div key={q.id} className={`question-card ${hasAnswer ? (isCorrect ? "correct" : "incorrect") : ""} ${isLocked ? "locked" : ""}`}>
               <div className="question-number">{qIndex + 1}</div>
               <h2 className="question-text">{q.question}</h2>
 
@@ -115,7 +138,7 @@ function App() {
                   const isCorrectOption = q.correctAnswer === oIndex;
 
                   let optionClass = "option";
-                  if (submitted) {
+                  if (hasAnswer) {
                     if (isCorrectOption) optionClass += " correct-option";
                     else if (isSelected && !isCorrectOption) optionClass += " wrong-option";
                   } else if (isSelected) {
@@ -123,15 +146,37 @@ function App() {
                   }
 
                   return (
-                    <button key={oIndex} className={optionClass} onClick={() => handleSelect(q.id, oIndex)} disabled={submitted}>
+                    <button key={oIndex} className={optionClass} onClick={() => handleSelect(q.id, oIndex)} disabled={isLocked}>
                       <span className="option-letter">{String.fromCharCode(65 + oIndex)}</span>
                       <span className="option-text">{option}</span>
-                      {submitted && isCorrectOption && <span className="check-icon">✓</span>}
-                      {submitted && isSelected && !isCorrectOption && <span className="x-icon">✗</span>}
+                      {hasAnswer && isCorrectOption && <span className="check-icon">✓</span>}
+                      {hasAnswer && isSelected && !isCorrectOption && <span className="x-icon">✗</span>}
                     </button>
                   );
                 })}
               </div>
+
+              {hasAnswer && (
+                <div className={`feedback ${isCorrect ? "feedback-correct" : "feedback-incorrect"}`}>
+                  <div className="feedback-header">
+                    <span className="feedback-icon">{isCorrect ? "✓" : "✗"}</span>
+                    <span className="feedback-title">{isCorrect ? "¡Correcto!" : "Incorrecto"}</span>
+                  </div>
+                  {isCorrect && q.explanation && <p className="feedback-explanation">{q.explanation}</p>}
+                  {!isCorrect && (
+                    <p className="feedback-explanation">
+                      La respuesta correcta es: <strong>{String.fromCharCode(65 + q.correctAnswer)}</strong> - {q.options[q.correctAnswer]}
+                      {q.explanation && (
+                        <>
+                          <br />
+                          <br />
+                          {q.explanation}
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
