@@ -1,9 +1,9 @@
 import { useState } from "react";
 import "./App.css";
-import { exam1, exam2 } from "./exams";
+import { exam1, exam2, exam3, exam4, exam5, exam6, exam7, exam8 } from "./exams";
 import type { Exam } from "./exams";
 
-const exams: Exam[] = [exam1, exam2];
+const exams: Exam[] = [exam1, exam2, exam3, exam4, exam5, exam6, exam7, exam8];
 
 function App() {
   const [currentExam, setCurrentExam] = useState<Exam>(exam1);
